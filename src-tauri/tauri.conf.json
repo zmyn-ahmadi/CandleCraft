@@ -1,0 +1,9 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "CandleCraft",
+  "version": "0.1.5",
+  "identifier": "app.margin.trading",
+  "build": { "beforeDevCommand": "npm run dev", "devUrl": "http://localhost:1420", "beforeBuildCommand": "npm run build", "frontendDist": "../dist" },
+  "app": { "windows": [{ "title": "CandleCraft — Trading Journal", "width": 1440, "height": 900, "minWidth": 1100, "minHeight": 700, "backgroundColor": "#191B21" }], "security": { "csp": null } },
+  "bundle": { "active": true, "targets": "all", "icon": ["icons/icon.png", "icons/icon.ico"] }
+}
