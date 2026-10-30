@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import { invoke } from '@tauri-apps/api/core'
 import { blankWorkspace, prepareWorkspace, validateWorkspace, type Workspace } from './model'
 import { createSaveQueue } from './saveQueue'
@@ -19,7 +20,10 @@ export async function loadWorkspace(): Promise<LoadedWorkspace> {
     return { workspace: prepareWorkspace(validateWorkspace(result.data || blankWorkspace())), recoveredFromBackup: result.recoveredFromBackup }
   }
   const primary = localStorage.getItem(STORAGE_KEY)
-  if (!primary) return { workspace: blankWorkspace(), recoveredFromBackup: false }
+  if (!primary) {
+    if (import.meta.env.VITE_DEMO) return { workspace: prepareWorkspace((await import('./demoWorkspace')).demoWorkspace()), recoveredFromBackup: false }
+    return { workspace: blankWorkspace(), recoveredFromBackup: false }
+  }
   try { return { workspace: parseWorkspace(primary), recoveredFromBackup: false } }
   catch {
     const backup = localStorage.getItem(BACKUP_KEY)
