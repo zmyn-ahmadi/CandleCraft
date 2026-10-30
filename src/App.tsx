@@ -114,7 +114,7 @@ export default function App() {
 
   return <div className={`app theme-${workspace.theme} wallpaper-${workspace.wallpaper || 'graphite'}`} style={customWallpaper ? { '--wallpaper-image': `url(${customWallpaper})` } as React.CSSProperties : undefined}>
     <aside className="sidebar">
-      <div className="brand"><img className="brand-mark" src="/candlecraft.svg" alt="" /><span>CandleCraft</span></div>
+      <div className="brand"><img className="brand-mark" src={`${import.meta.env.BASE_URL}candlecraft.svg`} alt="" /><span>CandleCraft</span></div>
       <div className="workspace-switch"><div className="workspace-avatar">M</div><div><strong>My workspace</strong><small>Personal trading desk</small></div><ChevronDown size={15} /></div>
       <nav>{navigation.map(group => <div className="nav-group" key={group.section}><div className="nav-heading">{group.section}</div>{group.items.map(item => <button key={item.id} className={`nav-item ${page === item.id ? 'active' : ''}`} onClick={() => setPage(item.id)}><item.icon size={18} strokeWidth={1.9} /><span>{item.label}</span>{page === item.id && <span className="nav-active-dot" />}</button>)}</div>)}</nav>
       <div className="sidebar-bottom"><div className="sidebar-tip"><Sparkles size={17} /><strong>Build better habits</strong><p>Capture the decision behind every trade, then review what changed.</p></div><div className="sidebar-profile"><div className="profile-avatar">MT</div><div><strong>Local workspace</strong><small>Private on this device</small></div><MoreHorizontal size={17} /></div></div>
