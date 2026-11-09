@@ -15,8 +15,9 @@ import { analyticsSeries, filterTrades } from './analytics'
 type Page = 'dashboard' | 'trades' | 'strategies' | 'risk' | 'canvas' | 'backtesting' | 'analytics' | 'settings'
 type Modal = 'trade' | 'strategy' | 'review' | 'import' | null
 const navigation: { section: string; items: { id: Page; label: string; icon: typeof LayoutDashboard }[] }[] = [
-  { section: 'WORKSPACE', items: [{ id: 'dashboard', label: 'Overview', icon: LayoutDashboard }, { id: 'trades', label: 'Trades', icon: BookOpen }, { id: 'risk', label: 'Risk management', icon: ShieldCheck }, { id: 'canvas', label: 'Canvas studio', icon: PenLine }, { id: 'strategies', label: 'Strategies', icon: Target }] },
-  { section: 'RESEARCH', items: [{ id: 'backtesting', label: 'Backtesting', icon: FlaskConical }, { id: 'analytics', label: 'Analytics & reviews', icon: Activity }] },
+  { section: 'TRADING', items: [{ id: 'dashboard', label: 'Overview', icon: LayoutDashboard }, { id: 'trades', label: 'Trades', icon: BookOpen }, { id: 'analytics', label: 'Analytics & reviews', icon: Activity }] },
+  { section: 'PRACTICE', items: [{ id: 'backtesting', label: 'Backtesting', icon: FlaskConical }] },
+  { section: 'PLAYBOOK', items: [{ id: 'strategies', label: 'Strategies', icon: Target }, { id: 'risk', label: 'Risk management', icon: ShieldCheck }, { id: 'canvas', label: 'Canvas studio', icon: PenLine }] },
   { section: 'PREFERENCES', items: [{ id: 'settings', label: 'Settings & data', icon: Settings2 }] },
 ]
 const pageTitles: Record<Page, string> = { dashboard: 'Overview', trades: 'Trades', risk: 'Risk management', canvas: 'Canvas studio', strategies: 'Strategies', backtesting: 'Backtesting', analytics: 'Analytics & reviews', settings: 'Settings & data' }
