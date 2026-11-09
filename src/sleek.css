@@ -516,3 +516,16 @@ html, body, #root { background: #191b21; }
 .scope-notice { margin-bottom: 18px; padding: 15px 18px; border: 1px solid var(--line); border-radius: 10px; background: var(--soft); color: var(--ink); }
 .scope-notice p { margin: 0 0 12px; font-size: 13px; }
 .scope-notice > div { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* Clarity pass: solid surfaces, one real accent, readable P&L. */
+.app.theme-dark { --accent: #5b9cf6; --up: #34c77b; --down: #f0605d; --card: #1f2229; --sidebar: #1a1c22; --muted: #9ba0aa; }
+.app.theme-light { --accent: #2563eb; --up: #15924f; --down: #d33a36; --card: #ffffff; --sidebar: #f4f5f6; }
+.sidebar, .topbar, .desk-bar, .card, .stat-card, .modal, .workspace-switch, .context-select, .toast { backdrop-filter: none; -webkit-backdrop-filter: none; }
+.button.primary, .theme-light .button.primary { background: var(--accent); color: #fff; border-color: transparent; }
+.button.primary:hover, .theme-light .button.primary:hover { background: var(--accent); filter: brightness(1.1); }
+.positive, .theme-light .positive, .theme-light .trade-table td.positive, .theme-light .journal-list-item strong.positive { color: var(--up) !important; }
+.negative, .theme-light .negative { color: var(--down) !important; }
+.stat-card.is-up strong { color: var(--up); }
+.stat-card.is-down strong { color: var(--down); }
+.stat-top span { text-transform: none; letter-spacing: 0; font-size: 13px; }
+.eyebrow { display: none; }
