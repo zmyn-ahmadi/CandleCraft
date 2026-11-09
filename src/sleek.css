@@ -529,3 +529,14 @@ html, body, #root { background: #191b21; }
 .stat-card.is-down strong { color: var(--down); }
 .stat-top span { text-transform: none; letter-spacing: 0; font-size: 13px; }
 .eyebrow { display: none; }
+.direction-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.direction-toggle button { display: flex; align-items: center; justify-content: center; gap: 6px; height: 40px; border-radius: 8px; border: 1px solid var(--line); background: var(--control); color: var(--muted); font-weight: 600; cursor: pointer; }
+.direction-toggle button.long.selected { background: var(--up); border-color: var(--up); color: #fff; }
+.direction-toggle button.short.selected { background: var(--down); border-color: var(--down); color: #fff; }
+.more-details { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 12px; }
+.more-details summary { display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--accent); font-weight: 600; list-style: none; }
+.more-details summary::-webkit-details-marker { display: none; }
+.more-details[open] summary svg { transform: rotate(180deg); }
+.more-details > .form-grid { margin-top: 14px; }
+.modal .result-preview { margin: 4px 0 16px; }
+.result-preview span { text-transform: none; letter-spacing: 0; font-size: 13px; }
