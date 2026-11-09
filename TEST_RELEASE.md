@@ -12,7 +12,7 @@ The Linux AppImage is installed at `$HOME/.local/opt/candlecraft/0.1.6/CandleCra
 
 ## What's new in 0.1.6
 
-MT5 journal: Settings → MetaTrader 5 takes the mt5-api address and token. The Journal tab then syncs every MT5 position and opens each trade on a whole-day M2 chart with its entry, exit, SL/TP zones and R. See README → MetaTrader 5 journal. The mt5-api it points at needs the `/rates` endpoint and CORS from `~/Trading/mt5-api/main.py`.
+MT5 journal: Settings → MetaTrader 5 takes the mt5-api address and token. The Trades screen then syncs every MT5 position and opens each trade on a whole-day M2 chart with its entry, exit, SL/TP zones and R. See README → MetaTrader 5 journal. The mt5-api it points at needs the `/rates` endpoint and CORS from `~/Trading/mt5-api/main.py`.
 
 ## Your data
 

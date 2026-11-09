@@ -8,14 +8,14 @@ CandleCraft is a local trading journal desktop app based on the requirements in 
 - Separate live, demo, and backtest views; multiple accounts with separate currencies.
 - Strategy rulebooks with preserved versions and required or optional checklist items.
 - Manual trade records with status, initial risk, signed costs, source, and journal fields.
-- Trade log, journal, dashboard, performance metrics, and dated weekly review snapshots.
-- MetaTrader 5 sync: the Journal tab pulls every position from your mt5-api and shows each one on a whole-day M2 chart with its entry, exit, SL/TP zones and R.
+- Trades screen (log and journal in one place), dashboard, performance metrics, and dated weekly review snapshots.
+- MetaTrader 5 sync: the Trades screen pulls every position from your mt5-api and shows each one on a whole-day M2 chart with its entry, exit, SL/TP zones and R.
 - Standalone Risk Management worksheet with saved rules, position sizing, manual circuit checks, and performance calculations.
 - Canvas Studio collections with multiple saved boards, drawing tools, movable notes, attached pictures, undo/redo, and zoom.
 - Portable JSON export and restore of current workspace records; automatic local recovery copies on desktop.
 - Light and dark themes, keyboard focus states, and `N` for a new trade when no text field is active.
 
-The interface uses a restrained glass layout with dark and light modes, three built in wallpapers, and an optional local image wallpaper. New workspaces start in dark mode with an AUD account. Existing USD trades keep their currency; an AUD account is added and selected when needed. The dashboard includes a position sizing estimate using user supplied pip value per lot. Trade log CSV import supports column mapping, row preview, validation, duplicate skipping, and a choice between gross and already net profit. Backtesting accepts local OHLC CSV files and saves a candle replay cursor; the chart only plots revealed candles. Trades recorded from replay are manual records. Journal entries can include before and after chart screenshots, stored in the workspace and JSON export, with a 1 MB limit per image.
+The interface uses a clean, solid layout with dark and light modes, three built in wallpapers, and an optional local image wallpaper. New workspaces start in dark mode with an AUD account. Existing USD trades keep their currency; an AUD account is added and selected when needed. The dashboard includes a position sizing estimate using user supplied pip value per lot. Trade log CSV import supports column mapping, row preview, validation, duplicate skipping, and a choice between gross and already net profit. Backtesting accepts local OHLC CSV files and saves a candle replay cursor; the chart only plots revealed candles. Trades recorded from replay are manual records. Journal entries can include before and after chart screenshots, stored in the workspace and JSON export, with a 1 MB limit per image.
 
 Desktop saves are queued in order and sent immediately after a workspace change. SQLite uses WAL and full synchronous commits. A latest JSON copy and one dated copy per UTC day are written in the app data `backups` directory; Settings shows that path. If the SQLite workspace record is damaged, the app archives it, restores the newest valid local copy, and displays a recovery notice. Browser preview has a smaller local storage fallback copy. A failed load never silently saves an empty workspace over the damaged data. Restoring a JSON export is validated and persisted before the app reports success.
 
@@ -27,7 +27,7 @@ This remains an early implementation increment. Replay does not calculate simula
 
 Settings → MetaTrader 5 takes the mt5-api address (for example `https://your-server.your-tailnet.ts.net`) and its token. Both stay in this app's local storage, never in the workspace or its exports.
 
-The Journal tab then syncs on opening, every minute while it is open, and from the sync button beside the entry count. Each MT5 position becomes one trade keyed `mt5:<position id>`: new positions are added, open ones update until they close, and your reasoning, notes, lessons, tags, checklist, strategy, risk and screenshots are never touched. Trades go to the account whose currency matches the MT5 account (otherwise the selected one), under Live for a real account and Demo otherwise; a manual sync switches the view there.
+The Trades screen then syncs on opening, every minute while it is open, and from the Sync MT5 button above the trade list. Each MT5 position becomes one trade keyed `mt5:<position id>`: new positions are added, open ones update until they close, and your reasoning, notes, lessons, tags, checklist, strategy, risk and screenshots are never touched. Trades go to the account whose currency matches the MT5 account (otherwise the selected one), under Live for a real account and Demo otherwise; a manual sync switches the view there.
 
 A trade's journal entry opens with a TradingView Lightweight Charts M2 chart of every broker-server day the trade touches: entry and exit arrows at the fill prices, a green TP zone with its planned R, a red SL zone, and a dotted path to the exit with the R it made. Scroll to zoom into the trade. SL/TP come from the opening order; when the order had none, a stop or target that closed the trade is taken from its exit. Candles of finished days are cached in a `candle_cache` table beside the workspace (not inside it); the rest are fetched from the mt5-api's `/rates` endpoint. The mt5-api must allow the app's origin (CORS), which its `main.py` does for `tauri://localhost`, `http://tauri.localhost` and the dev server.
 
@@ -61,7 +61,7 @@ cd src-tauri && cargo build --release --bin candlecraft
 
 The CLI writes to the desktop workspace with the same validation and backups. Close the desktop app before adding trades, because it saves its in-memory copy over the file. Journal fields (reasoning, notes, lessons, tags, checklist) are left empty for the app. Adding a trade again with the same `--ref` on the same account updates it and keeps its journal notes.
 
-`skills/candlecraft-mt5-sync` is an agent skill that pulls a day's open and closed positions from the mt5-api (set `MT5_API_URL` to its Tailscale address) and records them through this CLI, for when the app is closed. With the app open, its Journal tab syncs on its own. Re-adding keeps a trade's MT5 chart link: `MT5_API_URL=https://… MT5_API_TOKEN=… python3 skills/candlecraft-mt5-sync/scripts/sync.py 2026-10-28 --dry-run`.
+`skills/candlecraft-mt5-sync` is an agent skill that pulls a day's open and closed positions from the mt5-api (set `MT5_API_URL` to its Tailscale address) and records them through this CLI, for when the app is closed. With the app open, its Trades screen syncs on its own. Re-adding keeps a trade's MT5 chart link: `MT5_API_URL=https://… MT5_API_TOKEN=… python3 skills/candlecraft-mt5-sync/scripts/sync.py 2026-10-28 --dry-run`.
 
 For a browser preview without the desktop shell, use `npm run dev`. Browser preview data is stored in local storage; Tauri data is stored in the operating system's application data directory.
 

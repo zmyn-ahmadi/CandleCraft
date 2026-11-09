@@ -7,7 +7,7 @@ description: Pull a day's open and closed MT5 positions from the user's mt5-api 
 
 Records MT5 positions as CandleCraft trade entries. Trade fields only (symbol, direction, dates, prices, size, stop, target, P/L, commission, swap, exit reason); journal fields stay empty for the user to write in the app.
 
-CandleCraft also syncs MT5 by itself: its Journal tab pulls every position from the same mt5-api, keeps it updated while the tab is open, and shows each trade on a whole-day M2 chart with its SL/TP zones and R. Both paths write identical trades under the same `mt5:<position id>` ref, so they never duplicate. This skill is for when the app is closed, or the user wants an agent to do it.
+CandleCraft also syncs MT5 by itself: its Trades screen pulls every position from the same mt5-api, keeps it updated while that screen is open, and shows each trade on a whole-day M2 chart with its SL/TP zones and R. Both paths write identical trades under the same `mt5:<position id>` ref, so they never duplicate. This skill is for when the app is closed, or the user wants an agent to do it.
 
 Script: `scripts/sync.py` next to this file (Python 3 stdlib, no install).
 
@@ -23,14 +23,14 @@ Script: `scripts/sync.py` next to this file (Python 3 stdlib, no install).
    python3 scripts/sync.py 2026-10-28 --dry-run
    ```
 4. **Ask whether the CandleCraft desktop app is open.**
-   - Open, with Settings → MetaTrader 5 filled in: don't write. Tell the user to open the Journal tab (it syncs on opening) or press its sync button. Stop here.
+   - Open, with Settings → MetaTrader 5 filled in: don't write. Tell the user to open the Trades screen (it syncs on opening) or press Sync MT5. Stop here.
    - Open, without MT5 settings: ask them to close it, then confirm. The app saves its in-memory copy over the workspace file, so entries written while it is open are lost. Mention that filling in Settings → MetaTrader 5 lets the app sync and chart trades itself.
    - Closed: continue.
 5. **Write**:
    ```sh
    python3 scripts/sync.py 2026-10-28
    ```
-6. **Report** each `added` / `updated` line, and any `skipped` warnings, in a short table. Tell the user they can reopen the app; a trade's chart appears once the app has synced it (Journal tab, with MT5 settings filled in).
+6. **Report** each `added` / `updated` line, and any `skipped` warnings, in a short table. Tell the user they can reopen the app; a trade's chart appears once the app has synced it (Trades screen, with MT5 settings filled in).
 
 ## Options
 

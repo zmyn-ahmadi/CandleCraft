@@ -4,7 +4,7 @@ Records a day's MetaTrader 5 positions as trade entries in CandleCraft. It reads
 
 Only trade fields are filled in. Reasoning, notes, lessons, tags and checklist answers are left for you to write in the app.
 
-**The app can do this itself.** In CandleCraft, fill in Settings → MetaTrader 5 (server address and token). The Journal tab then syncs every position on opening, every minute while open, and from its sync button, and shows each trade on a whole-day M2 chart with entry/exit, SL/TP zones and R. Use this skill when the app is closed or you'd rather ask an agent; both write the same trades under the same key.
+**The app can do this itself.** In CandleCraft, fill in Settings → MetaTrader 5 (server address and token). The Trades screen then syncs every position on opening, every minute while open, and from its sync button, and shows each trade on a whole-day M2 chart with entry/exit, SL/TP zones and R. Use this skill when the app is closed or you'd rather ask an agent; both write the same trades under the same key.
 
 ## Setup (once)
 
@@ -42,7 +42,7 @@ The agent then:
 
 1. Works out the date (broker server date, as shown in the MT5 terminal).
 2. Does a dry run and shows you what it found.
-3. Asks whether CandleCraft is open. If it is and has MT5 settings, it tells you to sync from the Journal tab instead. Otherwise it asks you to close it.
+3. Asks whether CandleCraft is open. If it is and has MT5 settings, it tells you to sync from the Trades screen instead. Otherwise it asks you to close it.
 4. Writes the trades and reports what was added or updated.
 
 ## Using it without an agent
@@ -63,7 +63,7 @@ python3 skills/candlecraft-mt5-sync/scripts/sync.py 2026-10-28             # wri
 
 To list CandleCraft accounts or strategies: `src-tauri/target/release/candlecraft accounts` and `src-tauri/target/release/candlecraft strategies`.
 
-**Close the CandleCraft app before writing.** It keeps its own copy in memory and saves that over the file, so trades written while it is open are lost. If the app is open with MT5 settings, sync from its Journal tab instead.
+**Close the CandleCraft app before writing.** It keeps its own copy in memory and saves that over the file, so trades written while it is open are lost. If the app is open with MT5 settings, sync from its Trades screen instead.
 
 ## What gets recorded
 
