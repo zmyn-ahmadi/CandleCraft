@@ -4,7 +4,7 @@
 
 `src/App.tsx` owns the React workspace state and screen navigation. The app loads one `Workspace` object through `src/storage.ts` and queues immediate, ordered saves through `src/saveQueue.ts`. Browser previews use local storage; the Tauri app calls Rust commands in `src-tauri/src/lib.rs`. Rust stores the whole JSON workspace in one SQLite row with WAL and full synchronous commits, plus independent latest and dated JSON recovery copies. `src/model.ts` defines records and metric calculations, while `src/analytics.ts` produces filtered chart series.
 
-The new `src/ImportModal.tsx` uses `src/csv.ts` to parse, map, validate, and preview trade rows before importing them. `src/Replay.tsx` validates OHLC rows and charts only candles through the saved cursor. `src/styles.css` contains the original layout, `src/glass.css` adds feature styling, and `src/sleek.css` defines the current dark and light glass themes and wallpaper choices.
+The new `src/ImportModal.tsx` uses `src/csv.ts` to parse, map, validate, and preview trade rows before importing them. `src/Replay.tsx` validates OHLC rows and charts only candles through the saved cursor. `src/app.css` is the single stylesheet: layout, feature styling, dark and light themes, and wallpaper choices. Theme colours (`--accent`, `--up`, `--down`, `--card`) are set on `.app.theme-dark` / `.app.theme-light`.
 
 ## Feature status against the PRD
 
