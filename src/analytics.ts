@@ -28,3 +28,25 @@ export function analyticsSeries(trades: Trade[], currency = 'AUD') {
   closed.forEach(trade => { counts[outcome(net(trade)!, digits)]++ })
   return { curve, counts }
 }
+
+const closedWithNet = (trades: Trade[]) => trades.filter(trade => trade.status === 'closed' && net(trade) != null)
+const closeDate = (trade: Trade) => (trade.exitedAt || trade.enteredAt).slice(0, 10)
+
+/** Net result per calendar day (YYYY-MM-DD) for closed trades. */
+export function dailyNet(trades: Trade[]): Map<string, number> {
+  const days = new Map<string, number>()
+  for (const trade of closedWithNet(trades)) days.set(closeDate(trade), (days.get(closeDate(trade)) ?? 0) + net(trade)!)
+  return days
+}
+
+export interface BreakdownRow { key: string; trades: number; net: number; winRate: number; netR: number | null }
+
+/** Closed-trade results grouped by any key (pair, strategy, rule adherence…), best net first. */
+export function breakdown(trades: Trade[], keyOf: (trade: Trade) => string, currency = 'AUD'): BreakdownRow[] {
+  const digits = currencyDigits(currency), groups = new Map<string, Trade[]>()
+  for (const trade of closedWithNet(trades)) groups.set(keyOf(trade), [...(groups.get(keyOf(trade)) ?? []), trade])
+  return [...groups].map(([key, group]) => {
+    const rs = group.map(rMultiple).filter((r): r is number => r != null)
+    return { key, trades: group.length, net: group.reduce((sum, t) => sum + net(t)!, 0), winRate: group.filter(t => outcome(net(t)!, digits) === 'win').length / group.length, netR: rs.length ? rs.reduce((a, b) => a + b, 0) : null }
+  }).sort((a, b) => b.net - a.net)
+}

@@ -72,3 +72,16 @@ test('damaged trade and replay data are rejected before restore', () => {
   assert.throws(() => validateWorkspace({ ...valid, trades: [baseTrade({ fees: 'five' })] }), /invalid trades/)
   assert.throws(() => validateWorkspace({ ...valid, replay: { cursor: 9, candles: [{ time: '2025-01-01', open: 1, high: 2, low: 0, close: 1 }] } }), /invalid replay/)
 })
+
+test('daily net and breakdown group closed trades only', async () => {
+  const { dailyNet, breakdown } = await import(moduleUrl)
+  const trades = [
+    baseTrade({ id: 'a', symbol: 'EURUSD', exitedAt: '2025-01-02', gross: 100, fees: 0, initialRisk: 50 }),
+    baseTrade({ id: 'b', symbol: 'EURUSD', exitedAt: '2025-01-02', gross: -40, fees: 0, initialRisk: 40 }),
+    baseTrade({ id: 'c', symbol: 'GBPJPY', exitedAt: '2025-01-03', gross: 30, fees: -5, initialRisk: null }),
+    baseTrade({ id: 'd', symbol: 'GBPJPY', status: 'open', gross: 999 }),
+  ]
+  assert.deepEqual([...dailyNet(trades)], [['2025-01-02', 60], ['2025-01-03', 25]])
+  const rows = breakdown(trades, t => t.symbol)
+  assert.deepEqual(rows.map(r => [r.key, r.trades, r.net, r.winRate, r.netR]), [['EURUSD', 2, 60, 0.5, 1], ['GBPJPY', 1, 25, 1, null]])
+})
