@@ -7,6 +7,7 @@ import { initialScope, populatedScopes, type WorkspaceScope } from './workspaceS
 import { loadWorkspace, saveWorkspace, workspaceBackupLocation, workspaceLocation } from './storage'
 import ImportModal from './ImportModal'
 import Replay from './Replay'
+import { replayRef, settleReplayTrade } from './replayData'
 import JournalEvidence from './JournalEvidence'
 import TradeChart from './TradeChart'
 import { fetchMt5, loadMt5Settings, mergeMt5, saveMt5Settings, type Mt5Settings } from './mt5'
@@ -97,6 +98,8 @@ export default function App() {
   const selectedTrade = scopedTrades.find(t => t.id === selectedTradeId) || null
   const selectedStrategy = workspace.strategies.find(s => s.id === selectedStrategyId) || null
   const reviewCount = scopedTrades.filter(needsReview).length
+  const replayId = workspace.replay?.id
+  const sessionTrades = useMemo(() => replayId ? workspace.trades.filter(t => t.externalRef.startsWith(`replay:${replayId}:`)) : [], [workspace.trades, replayId])
   const filteredTrades = sortedTrades.filter(t => (statusFilter === 'all' || (statusFilter === 'review' ? needsReview(t) || t.id === selectedTradeId : t.status === statusFilter)) && `${t.symbol} ${t.direction} ${workspace.strategies.find(s => s.id === t.strategyId)?.name || ''}`.toLowerCase().includes(search.toLowerCase()))
   const updateTrade = (id: string, patch: Partial<Trade>) => setWorkspace(w => ({ ...w, trades: w.trades.map(t => t.id === id ? { ...t, ...patch, updatedAt: new Date().toISOString() } : t) }))
   const updateChecklist = (id: string, itemId: string, answer: Assessment) => setWorkspace(w => ({ ...w, trades: w.trades.map(t => t.id === id ? { ...t, checklist: { ...t.checklist, [itemId]: answer }, updatedAt: new Date().toISOString() } : t) }))
@@ -122,6 +125,17 @@ export default function App() {
     } catch (e) { if (manual) setToast(e instanceof Error ? e.message : 'MT5 sync failed') }
     finally { latest.current.syncing = false; setSyncing(false) }
   }
+  // Close open replay trades once the replay cursor reveals the candle that hits their stop or target.
+  useEffect(() => {
+    const d = workspace.replay
+    if (!loaded || !d) return
+    const patches = new Map(workspace.trades.flatMap(t => { const p = settleReplayTrade(t, d.candles, d.id, d.cursor); return p ? [[t.id, p] as const] : [] }))
+    if (!patches.size) return
+    setWorkspace(w => ({ ...w, trades: w.trades.map(t => t.status === 'open' && patches.has(t.id) ? { ...t, ...patches.get(t.id) } : t) }))
+    const [id, p] = [...patches][0], t = workspace.trades.find(x => x.id === id)!, r = (p.gross ?? 0) / (t.initialRisk || 1)
+    setToast(patches.size > 1 ? `${patches.size} backtest trades closed` : `${t.symbol} ${p.exitReason === 'stop' ? 'stopped out' : 'hit target'}: ${r >= 0 ? '+' : ''}${r.toFixed(2)}R`)
+  }, [loaded, workspace.replay?.id, workspace.replay?.cursor])
+
   useEffect(() => {
     if (!loaded || !mt5.url || !mt5.token) return
     void syncMt5(false)
@@ -170,7 +184,7 @@ export default function App() {
 
         {page === 'strategies' && <div className="strategies-layout"><section className="card strategy-list"><div className="panel-head"><span>YOUR PLAYBOOKS</span><button className="subtle-icon" onClick={() => { setSelectedStrategyId(null); setModal('strategy') }} title="New strategy"><Plus size={17} /></button></div>{workspace.strategies.length ? workspace.strategies.map(s => <button key={s.id} className={`strategy-list-item ${selectedStrategyId === s.id ? 'active' : ''}`} onClick={() => setSelectedStrategyId(s.id)}><div className="strategy-icon"><Target size={19} /></div><span><strong>{s.name}</strong><small>Version {s.versions.at(-1)?.number || 1} · {s.archived ? 'Archived' : 'Active'}</small></span><ChevronRight size={16} /></button>) : <div className="small-empty">No strategies yet. Write down your first rulebook.</div>}<button className="add-list-button" onClick={() => { setSelectedStrategyId(null); setModal('strategy') }}><Plus size={16} /> New strategy</button></section><section className="card strategy-detail">{selectedStrategy ? <StrategyDetail strategy={selectedStrategy} related={workspace.trades.filter(t => t.strategyId === selectedStrategy.id)} onEdit={() => setModal('strategy')} onArchive={() => setWorkspace(w => ({ ...w, strategies: w.strategies.map(s => s.id === selectedStrategy.id ? { ...s, archived: !s.archived } : s) }))} /> : <Empty icon={Target} title="Build your first playbook" text="Keep entry rules, risk decisions, and the checklist you use at the moment of a trade together. Each revision becomes a new version." action="Create a strategy" onAction={() => setModal('strategy')} />}</section></div>}
 
-        {page === 'backtesting' && <Replay dataset={workspace.replay} onChange={change => setWorkspace(w => ({ ...w, replay: typeof change === 'function' ? change(w.replay) : change }))} onRecord={() => { setEditingTrade({ ...initialTrade('backtest', accountId), symbol: workspace.replay?.symbol || 'EURUSD', enteredAt: workspace.replay?.candles[workspace.replay.cursor].time.slice(0, 10) || today(), source: 'replay' }); setModal('trade') }} />}
+        {page === 'backtesting' && <Replay dataset={workspace.replay} onChange={change => setWorkspace(w => ({ ...w, replay: typeof change === 'function' ? change(w.replay) : change }))} onRecord={() => { setEditingTrade({ ...initialTrade('backtest', accountId), symbol: workspace.replay?.symbol || 'EURUSD', enteredAt: workspace.replay?.candles[workspace.replay.cursor].time.slice(0, 10) || today(), source: 'replay' }); setModal('trade') }} sessionTrades={sessionTrades} strategies={workspace.strategies} onTakeTrade={order => { const d = workspace.replay; if (!d) return; const strategy = workspace.strategies.find(s => s.id === order.strategyId); setWorkspace(w => ({ ...w, trades: [{ ...initialTrade('backtest', accountId), status: 'open', symbol: d.symbol, direction: order.direction, strategyId: order.strategyId, strategyVersion: strategy?.versions.at(-1)?.number ?? null, enteredAt: d.candles[d.cursor].time.slice(0, 10), exitedAt: '', entryPrice: order.entry, initialStop: order.stop, target: order.target, initialRisk: order.risk, source: 'replay', externalRef: replayRef(d.id, d.cursor) }, ...w.trades] })); setToast(`${order.direction === 'long' ? 'Long' : 'Short'} ${d.symbol} entered at ${order.entry}`) }} />}
 
         {page === 'analytics' && <AnalyticsPage trades={scopedTrades} portfolioTrades={workspace.trades.filter(t => t.environment === environment && workspace.accounts.find(a => a.id === t.accountId)?.currency === account?.currency)} otherCurrencies={[...new Set(workspace.accounts.filter(a => a.currency !== account?.currency && workspace.trades.some(t => t.accountId === a.id && t.environment === environment)).map(a => a.currency))]} strategies={workspace.strategies} reviews={workspace.reviews.filter(r => r.environment === environment && (!r.accountId || r.accountId === accountId))} currency={account?.currency || 'AUD'} environment={environment} onReview={() => setModal('review')} onTrade={openTrade} />}
         {page === 'risk' && <RiskManagement notebook={workspace.riskNotebook || defaultRiskNotebook()} onChange={riskNotebook => setWorkspace(w => ({ ...w, riskNotebook }))} />}

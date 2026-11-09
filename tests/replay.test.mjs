@@ -106,3 +106,33 @@ test('drawings and volume survive workspace validation', () => {
   assert.equal(validateWorkspace(workspace).replay.timeframe, '1W')
   assert.throws(() => validateWorkspace({ ...workspace, replay: { ...workspace.replay, drawings: [{ ...workspace.replay.drawings[0], b: { index: 7, price: 630 } }] } }), /invalid replay drawings/)
 })
+
+test('replay exits: stop wins a shared candle, gaps fill at the open, shorts mirror longs', async () => {
+  const { simulateExit, settleReplayTrade, replayOrderError, replayRef } = await load('src/replayData.ts')
+  const c = (open, high, low, close, day) => ({ time: `2025-01-${String(day).padStart(2, '0')}T00:00:00.000Z`, open, high, low, close })
+  const candles = [c(100, 101, 99, 100, 1), c(100, 102, 99.5, 101, 2), c(101, 106, 94, 100, 3), c(100, 100, 90, 92, 4)]
+  // long, entry 100, stop 95, target 105: candle 3 touches both -> stop
+  assert.deepEqual(simulateExit(candles, 0, 'long', 95, 105), { index: 2, price: 95, reason: 'stop' })
+  // long, target hit cleanly
+  assert.deepEqual(simulateExit(candles, 0, 'long', 90, 101.5), { index: 1, price: 101.5, reason: 'target' })
+  // gap through the stop fills at the open (worse than the stop)
+  const gap = [c(100, 101, 99, 100, 1), c(93, 94, 92, 93, 2)]
+  assert.deepEqual(simulateExit(gap, 0, 'long', 95, 110), { index: 1, price: 93, reason: 'stop' })
+  // short mirrors: stop above, target below
+  assert.deepEqual(simulateExit(candles, 0, 'short', 103, 96), { index: 2, price: 103, reason: 'stop' })
+  assert.deepEqual(simulateExit(candles, 0, 'short', 110, 91), { index: 3, price: 91, reason: 'target' })
+  // nothing touched
+  assert.equal(simulateExit(candles, 0, 'long', 80, 120), null)
+
+  assert.equal(replayOrderError('long', 100, 95, 110, 50), null)
+  assert.match(replayOrderError('long', 100, 105, 110, 50), /stop must be below/)
+  assert.match(replayOrderError('short', 100, 95, 90, 50), /stop must be above/)
+  assert.match(replayOrderError('long', 100, 95, 110, 0), /risk amount/)
+
+  const trade = { status: 'open', direction: 'long', entryPrice: 100, initialStop: 98, target: 101.5, initialRisk: 50, externalRef: replayRef('d1', 0) }
+  assert.equal(settleReplayTrade(trade, candles, 'd1', 0), null, 'not settled before the exit candle is revealed')
+  const settled = settleReplayTrade(trade, candles, 'd1', 1)
+  assert.equal(settled.status, 'closed'); assert.equal(settled.exitReason, 'target'); assert.equal(settled.exitPrice, 101.5); assert.equal(settled.exitedAt, '2025-01-02')
+  assert.equal(settled.gross, 37.5) // 0.75R x 50
+  assert.equal(settleReplayTrade(trade, candles, 'other', 3), null, 'ignores trades from another dataset')
+})

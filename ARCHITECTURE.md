@@ -13,13 +13,13 @@ The new `src/ImportModal.tsx` uses `src/csv.ts` to parse, map, validate, and pre
 | Strategy | Versioned rulebooks and checklists | Frozen version validation and stronger change history |
 | Trades | Manual lifecycle, costs, R, basic CSV import | Partial fills, import batch undo and conflict review |
 | Journal | Notes, tags, checklist assessment, embedded screenshots, MT5 sync with whole-day M2 position charts (`src/mt5.ts`, `src/TradeChart.tsx`) | Managed attachment storage and evidence timing |
-| Backtesting | Imported OHLC, saved manual candle cursor, manual trade record | Immutable datasets and runs, execution engine, cost assumptions, gap handling |
+| Backtesting | Imported OHLC, saved candle cursor, replay trades with automatic stop/target exits (`simulateExit` in `src/replayData.ts`) and per-dataset session results, plus manual trade records | Immutable datasets and runs, cost assumptions, intrabar data for same-candle stop/target ordering |
 | Analytics | Net result, R, win rate, adherence, drawdown, filters, balance and R graphs, reviews | Strategy comparisons and fixed precision |
 | Data | Local SQLite JSON document, ordered saves, local recovery copies, JSON export and restore | Structured migrations, integrity hashes, trash and external backup |
 
 ## Important data boundaries
 
-- A replay trade currently records a user entered result. It is not a simulated fill.
+- A replay trade enters at the revealed candle's close and exits at the stop or target; when one candle touches both, the stop is assumed first. Results are R × the risk amount entered, without costs. Manual replay records still carry a user-entered result.
 - Position sizing uses a user supplied pip value. It does not know contract size or currency conversion.
 - JavaScript floating point values are used for money. Production calculations need decimal or scaled integer arithmetic.
 - A workspace export includes current records, embedded screenshots, and replay data, but has no manifest or hashes.

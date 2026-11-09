@@ -1,5 +1,5 @@
 import { parseCsv } from './csv'
-import type { Candle } from './model'
+import type { Candle, Trade } from './model'
 
 export function readCandles(text: string): Candle[] {
   const rows = parseCsv(text)
@@ -32,4 +32,40 @@ export function sma(candles: Candle[], period: number): (number | null)[] {
     if (index >= period) sum -= candles[index - period].close
     return index + 1 >= period ? sum / period : null
   })
+}
+
+export interface Fill { index: number; price: number; reason: 'stop' | 'target' }
+
+/** Walk the candles after `from` until the stop or target is touched.
+ *  A candle that touches both is treated as stopped out (OHLC cannot say which came first).
+ *  A gap through the stop fills at that candle's open; a gap through the target fills at the target. */
+export function simulateExit(candles: Candle[], from: number, direction: 'long' | 'short', stop: number, target: number): Fill | null {
+  const long = direction === 'long'
+  for (let index = from + 1; index < candles.length; index++) {
+    const c = candles[index]
+    if (long ? c.open <= stop : c.open >= stop) return { index, price: c.open, reason: 'stop' }
+    if (long ? c.low <= stop : c.high >= stop) return { index, price: stop, reason: 'stop' }
+    if (long ? c.high >= target : c.low <= target) return { index, price: target, reason: 'target' }
+  }
+  return null
+}
+
+/** Why a replay order cannot be placed, or null when stop, entry and target are in a valid order. */
+export function replayOrderError(direction: 'long' | 'short', entry: number, stop: number, target: number, risk: number): string | null {
+  if (![stop, target, risk].every(Number.isFinite) || risk <= 0) return 'Enter a stop, a target, and a risk amount above zero.'
+  if (direction === 'long' ? !(stop < entry && entry < target) : !(target < entry && entry < stop)) return direction === 'long' ? 'For a long, the stop must be below the entry and the target above it.' : 'For a short, the stop must be above the entry and the target below it.'
+  return null
+}
+
+export const replayRef = (datasetId: string, index: number) => `replay:${datasetId}:${index}`
+const refIndex = (trade: Trade, datasetId: string) => trade.externalRef.startsWith(`replay:${datasetId}:`) ? Number(trade.externalRef.slice(`replay:${datasetId}:`.length)) : NaN
+
+/** Close an open replay trade once the cursor reaches the candle where it exits. Gross = R × initial risk. */
+export function settleReplayTrade(trade: Trade, candles: Candle[], datasetId: string, cursor: number): Partial<Trade> | null {
+  const from = refIndex(trade, datasetId)
+  if (trade.status !== 'open' || !Number.isInteger(from) || trade.entryPrice == null || trade.initialStop == null || trade.target == null || trade.initialRisk == null) return null
+  const fill = simulateExit(candles, from, trade.direction, trade.initialStop, trade.target)
+  if (!fill || fill.index > cursor) return null
+  const r = (trade.direction === 'long' ? fill.price - trade.entryPrice : trade.entryPrice - fill.price) / Math.abs(trade.entryPrice - trade.initialStop)
+  return { status: 'closed', exitPrice: fill.price, exitedAt: candles[fill.index].time.slice(0, 10), gross: Math.round(r * trade.initialRisk * 100) / 100, exitReason: fill.reason, updatedAt: new Date().toISOString() }
 }

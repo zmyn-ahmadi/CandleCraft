@@ -936,3 +936,14 @@ html, body, #root { background: #191b21; }
 .breakdown-table th { text-align: left; font-weight: 600; color: var(--muted); font-size: 12px; padding: 8px 6px; border-bottom: 1px solid var(--line); }
 .breakdown-table td { padding: 10px 6px; border-bottom: 1px solid var(--line); }
 .breakdown-table th:not(:first-child), .breakdown-table td:not(:first-child) { text-align: right; }
+.replay-order, .replay-session { display: grid; gap: 10px; padding-bottom: 18px; margin-bottom: 18px; border-bottom: 1px solid var(--line); }
+.replay-order h3, .replay-session h3 { margin: 0; }
+.replay-order .form-grid { gap: 10px; }
+.replay-entry { margin: 0; color: var(--muted); font-size: 13px; }
+.replay-entry strong { color: var(--ink); }
+.replay-session-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.replay-session-stats div { background: var(--soft); border-radius: 8px; padding: 8px 10px; display: grid; gap: 2px; }
+.replay-session-stats span { font-size: 11px; color: var(--muted); }
+.replay-session-trade { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.replay-session-trade > :last-child { margin-left: auto; }
+.replay-session-trade em { color: var(--muted); font-style: normal; }
