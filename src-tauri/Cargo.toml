@@ -1,8 +1,9 @@
 [package]
 name = "tlog"
-version = "0.1.5"
+version = "0.1.6"
 description = "A local trading journal"
 edition = "2021"
+default-run = "tlog"
 
 [lib]
 name = "tlog_lib"

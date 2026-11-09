@@ -1,6 +1,7 @@
 import { invoke } from '@tauri-apps/api/core'
 import { blankWorkspace, prepareWorkspace, validateWorkspace, type Workspace } from './model'
 import { createSaveQueue } from './saveQueue'
+import type { Bar } from './mt5'
 
 const STORAGE_KEY = 'margin-workspace'
 const BACKUP_KEY = 'margin-workspace-backup'
@@ -53,4 +54,14 @@ export async function workspaceLocation(): Promise<string> {
 
 export async function workspaceBackupLocation(): Promise<string> {
   return isTauri() ? invoke<string>('workspace_backup_location') : 'Browser preview · local storage backup'
+}
+
+// Chart candles live in their own table, not the workspace document, which is rewritten on every edit.
+// The browser preview has no cache and fetches each time.
+export async function cachedBars(key: string): Promise<Bar[] | null> {
+  return isTauri() ? invoke<Bar[] | null>('load_candles', { key }) : null
+}
+
+export async function cacheBars(key: string, data: Bar[]): Promise<void> {
+  if (isTauri()) await invoke('save_candles', { key, data })
 }

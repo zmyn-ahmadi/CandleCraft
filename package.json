@@ -1,7 +1,7 @@
 {
   "name": "candlecraft",
   "private": true,
-  "version": "0.1.5",
+  "version": "0.1.6",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@tauri-apps/api": "https://registry.npmjs.org/@tauri-apps/api/-/api-2.12.1.tgz",
+    "lightweight-charts": "https://registry.npmjs.org/lightweight-charts/-/lightweight-charts-5.2.1.tgz",
     "lucide-react": "https://registry.npmjs.org/lucide-react/-/lucide-react-0.577.0.tgz",
     "react": "https://registry.npmjs.org/react/-/react-19.2.4.tgz",
     "react-dom": "https://registry.npmjs.org/react-dom/-/react-dom-19.2.4.tgz"

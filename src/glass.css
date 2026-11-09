@@ -100,3 +100,11 @@ body { min-width: 900px; }
 @media (max-width: 1250px) { .planner-card { grid-template-columns: 1fr 1.7fr; }.planner-result { grid-column: 1/-1; flex-direction: row; align-items: baseline; gap: 10px; }.planner-result small { margin-left: auto; }.replay-layout { grid-template-columns: 1fr; } }
 @media (max-width: 1050px) { .content { padding: 24px 18px; }.sidebar { width: 70px; min-width: 70px; }.planner-card { display: block; }.planner-fields { margin-top: 20px; }.planner-result { margin-top: 8px; }.summary-copy { width: 70%; }.context-controls { flex-wrap: wrap; } }
 @media (prefers-reduced-motion: reduce) { *,*::before,*::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
+
+/* MT5 trade chart in the journal */
+.trade-chart-section { padding-top: 4px; }
+.trade-chart { height: 420px; margin: 0 -6px; }
+.mt5-sync { margin-right: 6px; vertical-align: middle; }
+.mt5-sync.spinning svg { animation: mt5-spin 1s linear infinite; }
+@keyframes mt5-spin { to { transform: rotate(360deg); } }
+.mt5-settings .field { margin-bottom: 12px; }

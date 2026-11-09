@@ -11,9 +11,9 @@ use tauri::Manager;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct WorkspaceLoad {
-    data: Option<Value>,
-    recovered_from_backup: bool,
+pub struct WorkspaceLoad {
+    pub data: Option<Value>,
+    pub recovered_from_backup: bool,
 }
 
 fn app_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
@@ -38,7 +38,8 @@ fn connection(path: &Path) -> Result<Connection, String> {
             revision INTEGER NOT NULL,
             data TEXT NOT NULL,
             updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-        );",
+        );
+        CREATE TABLE IF NOT EXISTS candle_cache (key TEXT PRIMARY KEY, data TEXT NOT NULL);",
     )
     .map_err(|e| e.to_string())?;
     Ok(conn)
@@ -349,7 +350,7 @@ fn read_backup(dir: &Path) -> Result<Option<Value>, String> {
     Ok(None)
 }
 
-fn save_document(path: &Path, data: &Value) -> Result<(), String> {
+pub fn save_document(path: &Path, data: &Value) -> Result<(), String> {
     validate_workspace(data)?;
     let json = serde_json::to_string(data).map_err(|e| e.to_string())?;
     let mut conn = connection(path)?;
@@ -383,7 +384,7 @@ fn archive_damaged_database(path: &Path) -> Result<(), String> {
     Ok(())
 }
 
-fn load_document(dir: &Path) -> Result<WorkspaceLoad, String> {
+pub fn load_document(dir: &Path) -> Result<WorkspaceLoad, String> {
     let path = dir.join("workspace.db");
     let primary = read_primary(&path);
     if let Ok(Some(ref data)) = primary {
@@ -434,13 +435,45 @@ fn workspace_backup_location(app: tauri::AppHandle) -> Result<String, String> {
     Ok(backup_dir(&app_dir(&app)?).display().to_string())
 }
 
+// Finished MT5 chart days, keyed by symbol and window. Kept beside the workspace, not in it: it is re-fetchable,
+// and the workspace document is rewritten on every edit.
+fn read_candles(path: &Path, key: &str) -> Result<Option<Value>, String> {
+    let row: Option<String> = connection(path)?
+        .query_row("SELECT data FROM candle_cache WHERE key = ?1", params![key], |r| r.get(0))
+        .optional()
+        .map_err(|e| e.to_string())?;
+    row.map(|json| serde_json::from_str(&json).map_err(|e| e.to_string())).transpose()
+}
+
+fn write_candles(path: &Path, key: &str, data: &Value) -> Result<(), String> {
+    if !data.is_array() {
+        return Err("candles must be an array".into());
+    }
+    connection(path)?
+        .execute("INSERT OR REPLACE INTO candle_cache (key, data) VALUES (?1, ?2)", params![key, data.to_string()])
+        .map(|_| ())
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn load_candles(app: tauri::AppHandle, key: String) -> Result<Option<Value>, String> {
+    read_candles(&db_path(&app)?, &key)
+}
+
+#[tauri::command]
+fn save_candles(app: tauri::AppHandle, key: String, data: Value) -> Result<(), String> {
+    write_candles(&db_path(&app)?, &key, &data)
+}
+
 pub fn run() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             load_workspace,
             save_workspace,
             workspace_location,
-            workspace_backup_location
+            workspace_backup_location,
+            load_candles,
+            save_candles
         ])
         .run(tauri::generate_context!())
         .expect("error while running CandleCraft");
@@ -494,6 +527,20 @@ mod tests {
                     .to_string_lossy()
                     .starts_with("workspace.db.damaged-")
             }));
+    }
+
+    #[test]
+    fn caches_candles_beside_the_workspace() {
+        let dir = std::env::temp_dir().join(format!("candlecraft-candles-{}", std::process::id()));
+        fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("workspace.db");
+        assert_eq!(read_candles(&path, "XAUUSD:0:86400").unwrap(), None);
+        let bars = serde_json::json!([{"time": 0, "open": 1.0, "high": 2.0, "low": 0.5, "close": 1.5}]);
+        write_candles(&path, "XAUUSD:0:86400", &bars).unwrap();
+        assert_eq!(read_candles(&path, "XAUUSD:0:86400").unwrap(), Some(bars));
+        assert!(write_candles(&path, "k", &serde_json::json!({})).is_err());
+        assert_eq!(read_primary(&path).unwrap(), None); // the workspace document is untouched
+        fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]

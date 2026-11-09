@@ -12,7 +12,7 @@ The new `src/ImportModal.tsx` uses `src/csv.ts` to parse, map, validate, and pre
 | --- | --- | --- |
 | Strategy | Versioned rulebooks and checklists | Frozen version validation and stronger change history |
 | Trades | Manual lifecycle, costs, R, basic CSV import | Partial fills, import batch undo and conflict review |
-| Journal | Notes, tags, checklist assessment, embedded screenshots | Managed attachment storage and evidence timing |
+| Journal | Notes, tags, checklist assessment, embedded screenshots, MT5 sync with whole-day M2 position charts (`src/mt5.ts`, `src/TradeChart.tsx`) | Managed attachment storage and evidence timing |
 | Backtesting | Imported OHLC, saved manual candle cursor, manual trade record | Immutable datasets and runs, execution engine, cost assumptions, gap handling |
 | Analytics | Net result, R, win rate, adherence, drawdown, filters, balance and R graphs, reviews | Strategy comparisons and fixed precision |
 | Data | Local SQLite JSON document, ordered saves, local recovery copies, JSON export and restore | Structured migrations, integrity hashes, trash and external backup |
